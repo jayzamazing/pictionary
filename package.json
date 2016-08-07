@@ -1,0 +1,31 @@
+{
+  "name": "pictionary",
+  "version": "1.0.0",
+  "description": "An irt pictionary game. ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jayzamazing/pictionary.git"
+  },
+  "keywords": [
+    "pictionary",
+    "html",
+    "css",
+    "javascript",
+    "node",
+    "socket.io"
+  ],
+  "author": "adrian j lopez <adrianjaylopez@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jayzamazing/pictionary/issues"
+  },
+  "homepage": "https://github.com/jayzamazing/pictionary#readme",
+  "dependencies": {
+    "express": "^4.14.0",
+    "socket.io": "^1.4.8"
+  }
+}
