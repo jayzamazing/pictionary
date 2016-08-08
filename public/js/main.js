@@ -1,7 +1,27 @@
 $(document).ready(function() {
+  //create manager object by calling io function
+  var socket = io();
+  //deal with emit guess from server
+  var addAnswer = function(answer) {
+    //add answer to end of guesses
+    $('#answer').text(answer);
+  };
+  var onKeyDown = function(event) {
+    //if the keycode is not enter
+    if (event.keyCode != 13) {
+      //exit
+      return;
+    }
+    //show guess in console
+    console.log(guessBox.val());
+    //sends message to socket.io server
+    socket.emit('guess', guessBox.val());
+    //empty input
+    guessBox.val('');
+  };
   //function to deal with drawing on the canvas
   var pictionary = function() {
-    var canvas, context, drawing = false;
+    var canvas, context, drawing = false, guessBox;
     /*
     * Used to draw on the canvas
     * @param position - xy position - offset
@@ -29,6 +49,8 @@ $(document).ready(function() {
       //substract offset of canvas from x y, relative position to top left of canvas
       var position = {x: event.pageX - offset.left,
                       y: event.pageY - offset.top};
+      //send position to the server to share the drawing
+      socket.emit('draw', position);
       //pass position to draw function
       draw(position);
     }
@@ -41,7 +63,13 @@ $(document).ready(function() {
     canvas.on('mouseup', function() {
       drawing = false;
     });
+    socket.on('draw', draw);
   };
   //calls pictionary function
   pictionary();
+  //get the guess box
+  guessBox = $('#guess input');
+  //when key is pressed, call onkeydown function
+  guessBox.on('keydown', onKeyDown);
+  socket.on('guess', addAnswer);
 });
