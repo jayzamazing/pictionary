@@ -26,13 +26,10 @@ io.on('connection', function(socket) {
       //let the user know they connected
       socket.emit('message', 'You are connected to the server.');
       //tell everyone who is connected that the user just joined
-      socket.broadcast.emit('message', name + ' has joined the server. There are ' + usersConnected + ' online.')
-          //send out list of currently connected users
-      io.emit('users', users);
+      socket.broadcast.emit('message', name + ' has joined the server. There are ' + usersConnected + ' online.');
   });
   //TODO
   socket.on('userTurn', function() {
-      console.log('inside user turn');
       //always ensure there are at least 2 players
       if (usersConnected >= 2) {
         currentTurn++;
@@ -40,13 +37,14 @@ io.on('connection', function(socket) {
         if (currentTurn > usersConnected) {
           currentTurn = 1;
         }
-        var temp = Object.keys(users).forEach(function(key, index) {
+        //iterate over each element and if current items index equals curret turn, return key
+        var temp = Object.keys(users).find(function(key, index) {
           if (index === currentTurn) {
             return key;
           }
         });
         //send message to specific user
-        socket.to(temp).emit('userTurn', true);
+        io.to(temp).emit('userTurn', true);
         //tell everyone else that it is not their turn
         socket.broadcast.emit('userTurn', false);
       } else {
