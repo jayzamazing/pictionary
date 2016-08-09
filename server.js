@@ -42,13 +42,13 @@ io.on('connection', function(socket) {
         }
         var temp = Object.keys(users).forEach(function(key, index) {
           if (index === currentTurn) {
-            console.log(key);
+            return key;
           }
         });
         //send message to specific user
-        // socket.to(  ).emit('userTurn', true);
+        socket.to(temp).emit('userTurn', true);
         //tell everyone else that it is not their turn
-        // socket.broadcast.emit('userTurn', false);
+        socket.broadcast.emit('userTurn', false);
       } else {
         socket.emit('message', 'Waiting for more users to connect.');
       }
