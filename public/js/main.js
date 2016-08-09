@@ -1,11 +1,18 @@
 $(document).ready(function() {
   //create manager object by calling io function
-  var socket = io();
+  var socket = io(), currentTurn = false;
   //deal with emit guess from server
   var addAnswer = function(answer) {
     //add answer to end of guesses
     $('#answer').text(answer);
   };
+  var userTurn = function(turn) {
+    if (turn) {
+      currentTurn = true;
+    } else {
+      $('#guess').removeClass('hide');
+    }
+  }
   var onKeyDown = function(event) {
     //if the keycode is not enter
     if (event.keyCode != 13) {
@@ -19,6 +26,20 @@ $(document).ready(function() {
     //empty input
     guessBox.val('');
   };
+  var keyDownUser = function(event) {
+    //if the keycode is not enter
+    if (event.keyCode != 13) {
+      //exit
+      return;
+    }
+    //show username in console
+    console.log(userName.val());
+    //sends username to socket.io server
+    socket.emit('join', userName.val());
+    //empty input
+    $('#namefield').addClass('hide');
+    socket.emit('userTurn');
+  }
   //function to deal with drawing on the canvas
   var pictionary = function() {
     var canvas, context, drawing = false, guessBox;
@@ -43,16 +64,16 @@ $(document).ready(function() {
     canvas[0].height = canvas[0].offsetHeight;
     //listener for when the mouse moves on the canvas
     canvas.on('mousemove', function(event) {
-      if (drawing) {
-      //get the offset of the canvas
-      var offset = canvas.offset();
-      //substract offset of canvas from x y, relative position to top left of canvas
-      var position = {x: event.pageX - offset.left,
-                      y: event.pageY - offset.top};
-      //send position to the server to share the drawing
-      socket.emit('draw', position);
-      //pass position to draw function
-      draw(position);
+      if (drawing && currentTurn) {
+        //get the offset of the canvas
+        var offset = canvas.offset();
+        //substract offset of canvas from x y, relative position to top left of canvas
+        var position = {x: event.pageX - offset.left,
+                        y: event.pageY - offset.top};
+        //send position to the server to share the drawing
+        socket.emit('draw', position);
+        //pass position to draw function
+        draw(position);
     }
     });
     //deals with setting drawing as true on mousedown
@@ -68,8 +89,12 @@ $(document).ready(function() {
   //calls pictionary function
   pictionary();
   //get the guess box
-  guessBox = $('#guess input');
+  var guessBox = $('#guess input');
+  //get the namefield input
+  var userName = $('#namefield input');
   //when key is pressed, call onkeydown function
   guessBox.on('keydown', onKeyDown);
+  userName.on('keydown', keyDownUser);
   socket.on('guess', addAnswer);
+  socket.on('userTurn', userTurn);
 });

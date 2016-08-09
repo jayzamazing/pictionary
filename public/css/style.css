@@ -28,6 +28,6 @@ canvas {
     margin: 0 auto;
 }
 
-#guess {
+.hide {
   display: none;
 }
