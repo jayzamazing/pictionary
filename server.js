@@ -2,6 +2,7 @@
 var http = require('http');
 var express = require('express');
 var socket_io = require('socket.io');
+var fs = require('fs');
 //get instance of express
 var app = express();
 //add static files for express to use
@@ -11,7 +12,9 @@ var server = http.Server(app);
 //create sockets
 var io = socket_io(server);
 //keep track of connections
-var users = {}, usersConnected = 0, currentTurn = 0;
+var users = {}, usersConnected = 0, currentTurn, rightAnswer = '', data = [];
+//get the data from the json file
+data = JSON.parse(fs.readFileSync('data.json'));
 //attach listener to connection event
 io.on('connection', function(socket) {
   console.log('Client connected');
@@ -23,32 +26,24 @@ io.on('connection', function(socket) {
       console.log('Clients connected: ' + usersConnected);
       //add user
       users[socket.id] = name;
-      //let the user know they connected
-      socket.emit('message', 'You are connected to the server.');
-      //tell everyone who is connected that the user just joined
-      socket.broadcast.emit('message', name + ' has joined the server. There are ' + usersConnected + ' online.');
   });
-  //TODO
+  //attach listener for userturn to deal with telling who can draw and who can guess
   socket.on('userTurn', function() {
       //always ensure there are at least 2 players
       if (usersConnected >= 2) {
-        currentTurn++;
-        //loop back to the first user
-        if (currentTurn > usersConnected) {
-          currentTurn = 1;
-        }
-        //iterate over each element and if current items index equals curret turn, return key
-        var temp = Object.keys(users).find(function(key, index) {
-          if (index === currentTurn) {
-            return key;
-          }
-        });
         //send message to specific user
-        io.to(temp).emit('userTurn', true);
+        io.to(currentTurn).emit('userTurn', true);
+        rightAnswer = data.words[Math.floor(Math.random() * (data.words.length - 1))];
+        io.to(currentTurn).emit('message', rightAnswer);
         //tell everyone else that it is not their turn
-        socket.broadcast.emit('userTurn', false);
+        socket.emit('userTurn', false);
+        //clear out any previous message
+        socket.emit('message', '');
       } else {
+        //emit message that they are waiting on additional user
         socket.emit('message', 'Waiting for more users to connect.');
+        //store the first user as having the current turn
+        currentTurn = Object.keys(users)[0];
       }
   });
   socket.on('draw', function(position) {
@@ -57,8 +52,16 @@ io.on('connection', function(socket) {
   });
   //attach listener to the guess emit event
   socket.on('guess', function(guess) {
-    //tell everyone pictionary guess
-    socket.broadcast.emit('guess', guess[socket.id] + ': ' + guess);
+    if (rightAnswer.localeCompare(guess) === 0) {
+      //tell everyone pictionary guess
+      socket.broadcast.emit('guess', users[socket.id] + ' wins: ' + guess);
+      socket.broadcast.emit('correct', false);
+      currentTurn = socket.id;
+      socket.emit('correct', true);
+    } else {
+      //tell everyone pictionary guess
+      socket.broadcast.emit('guess', users[socket.id] + ': ' + guess);
+    }
   });
   //send message to users when a user disconnects
   socket.on('disconnect', function() {

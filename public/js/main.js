@@ -6,10 +6,16 @@ $(document).ready(function() {
     //add answer to end of guesses
     $('#answer').text(answer);
   };
+  //function either allows user to draw or make guesses
   var userTurn = function(turn) {
+    //if turn is true
     if (turn) {
+      $('#guess').addClass('hide');
+      //set to true to allow drawing
       currentTurn = true;
+      //otherwise
     } else {
+      //unhide and allow guesses
       $('#guess').removeClass('hide');
     }
   }
@@ -38,6 +44,31 @@ $(document).ready(function() {
     socket.emit('join', userName.val());
     //empty input
     $('#namefield').addClass('hide');
+    socket.emit('userTurn');
+  }
+  var showMessage = function(message) {
+    $('#message').text(message);
+  }
+  var showCorrect = function(won) {
+    if (won) {
+      $('#correct').removeClass('hide');
+    }
+    $('#message').text('Starting new game in 5 seconds');
+    setTimeout(startNewGame, 5000);
+  }
+  var startNewGame = function() {
+    //ensure everything is cleared off
+    $('#correct').addClass('hide');
+    $('#guess').addClass('hide');
+    $('#namefield').addClass('hide');
+    $('#message').text('');
+    $('#answer').text('');
+    currentTurn = false;
+    //select the canvas element
+    canvas = $('canvas');
+    //create drawing context for the canvas
+    context = canvas[0].getContext('2d');
+    context.clearRect(0, 0, 800, 600);
     socket.emit('userTurn');
   }
   //function to deal with drawing on the canvas
@@ -95,6 +126,9 @@ $(document).ready(function() {
   //when key is pressed, call onkeydown function
   guessBox.on('keydown', onKeyDown);
   userName.on('keydown', keyDownUser);
+  //listeners
   socket.on('guess', addAnswer);
   socket.on('userTurn', userTurn);
+  socket.on('message', showMessage);
+  socket.on('correct', showCorrect);
 });
