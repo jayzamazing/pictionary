@@ -8,9 +8,10 @@ $(document).ready(function() {
   };
   //function either allows user to draw or make guesses
   var userTurn = function(turn) {
+    //set ui to clean slate
+    startNewGame();
     //if turn is true
     if (turn) {
-      $('#guess').addClass('hide');
       //set to true to allow drawing
       currentTurn = true;
       //otherwise
@@ -19,6 +20,7 @@ $(document).ready(function() {
       $('#guess').removeClass('hide');
     }
   }
+  //function to deal with emitting guesses
   var onKeyDown = function(event) {
     //if the keycode is not enter
     if (event.keyCode != 13) {
@@ -32,6 +34,7 @@ $(document).ready(function() {
     //empty input
     guessBox.val('');
   };
+  //function to deal with joining game using a name
   var keyDownUser = function(event) {
     //if the keycode is not enter
     if (event.keyCode != 13) {
@@ -44,18 +47,33 @@ $(document).ready(function() {
     socket.emit('join', userName.val());
     //empty input
     $('#namefield').addClass('hide');
+    //emit userturn
     socket.emit('userTurn');
   }
+  //function to show messages
   var showMessage = function(message) {
+    //show messages in ui
     $('#message').text(message);
   }
+  //function to deal with showing who won and waiting for next game
   var showCorrect = function(won) {
-    if (won) {
-      $('#correct').removeClass('hide');
-    }
+    //display next game message
     $('#message').text('Starting new game in 5 seconds');
-    setTimeout(startNewGame, 5000);
+    //only perform if this user won
+    if (won) {
+      //show that user has correct answer
+      $('#correct').removeClass('hide');
+      //perform function and then wait 5 seconds
+      setTimeout(function() {
+        socket.emit('userTurn');
+      }, 5000);
+      //otherwise
+    } else {
+      //wait 5 seconds
+      setTimeout(null, 5000);
+    }
   }
+  //function that deals with reseting ui
   var startNewGame = function() {
     //ensure everything is cleared off
     $('#correct').addClass('hide');
@@ -69,7 +87,6 @@ $(document).ready(function() {
     //create drawing context for the canvas
     context = canvas[0].getContext('2d');
     context.clearRect(0, 0, 800, 600);
-    socket.emit('userTurn');
   }
   //function to deal with drawing on the canvas
   var pictionary = function() {
@@ -115,6 +132,7 @@ $(document).ready(function() {
     canvas.on('mouseup', function() {
       drawing = false;
     });
+    //passes coordinates to draw on the canvas
     socket.on('draw', draw);
   };
   //calls pictionary function
