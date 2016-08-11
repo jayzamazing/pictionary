@@ -73,6 +73,13 @@ $(document).ready(function() {
       setTimeout(null, 5000);
     }
   }
+  //function to reset game due to lack of players
+  var resetGame = function() {
+    //perform function and then wait 5 seconds
+    setTimeout(function() {
+      socket.emit('userTurn');
+    }, 5000);
+  }
   //function that deals with reseting ui
   var startNewGame = function() {
     //ensure everything is cleared off
@@ -149,4 +156,5 @@ $(document).ready(function() {
   socket.on('userTurn', userTurn);
   socket.on('message', showMessage);
   socket.on('correct', showCorrect);
+  socket.on('resetGame', resetGame);
 });

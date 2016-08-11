@@ -98,9 +98,14 @@ io.on('connection', function(socket) {
       //as long as user disconnecting is valid
       if (users[socket.id] !== undefined) {
           //tell everyone that user is disconnecting
-          socket.broadcast.emit('message', users[socket.id] + ' has disconnected. There are ' + usersConnected + ' online.');
+          socket.broadcast.emit('message', users[socket.id] + ' has disconnected. There are ' + (usersConnected - 1) + ' players online.');
           //remove user from list
           delete users[socket.id];
+      }
+      //if there is only one user online
+      if (usersConnected < 2) {
+          //send reset emit message
+          socket.broadcast.emit('resetGame');
       }
   });
 });
